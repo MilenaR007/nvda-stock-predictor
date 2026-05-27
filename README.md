@@ -4,9 +4,10 @@ emoji: 📈
 colorFrom: red
 colorTo: red
 sdk: streamlit
-app_file: streamlit_app.py
-pinned: false
 sdk_version: 1.57.0
+app_file: app.py
+python_version: 3.10
+pinned: false
 ---
 
 # NVDA Stock Predictor

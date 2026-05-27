@@ -1,3 +1,11 @@
-altair
 pandas
+numpy
+scikit-learn
+lightgbm
+alpaca-trade-api
+transformers
+yfinance
+scipy
+matplotlib
+torch
 streamlit

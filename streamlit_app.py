@@ -190,15 +190,50 @@ if st.button("Run Analysis", type="primary"):
             st.success("Models trained successfully!")
             
             # --- CHART ---
-            st.subheader("📊 Actual vs. Predicted Log-Returns (Test Set)")
-            fig, ax = plt.subplots(figsize=(14, 6))
+            st.subheader("📊 Strategy Performance & Analysis")
             
-            ax.plot(y_test.index, y_test.values, label="Actual Return", color='black', linewidth=1.5, alpha=0.8)
-            ax.plot(y_test.index, ridge_preds, label="Ridge Regression", color='blue', linewidth=1.5, alpha=0.7)
-            ax.plot(y_test.index, lgb_preds, label="LightGBM", color='darkorange', linewidth=1.5, alpha=0.7)
+            # 1. Calculate Cumulative Returns (Equity Curve)
+            # Log returns are additive. We use exp(cumsum(returns)) to calculate the growth of $1
+            cum_bh = np.exp(y_test.cumsum())
             
-            ax.axhline(0, color='red', linestyle='--', alpha=0.5)
-            ax.legend(loc="upper left")
-            ax.grid(True, linestyle=':', alpha=0.6)
+            # Strategy: Go Long (+1) if predicted > 0, Go Short (-1) if predicted < 0
+            ridge_positions = np.where(ridge_preds > 0, 1, -1)
+            ridge_strat_returns = ridge_positions * y_test.values
+            cum_ridge = np.exp(np.cumsum(ridge_strat_returns))
             
+            lgb_positions = np.where(lgb_preds > 0, 1, -1)
+            lgb_strat_returns = lgb_positions * y_test.values
+            cum_lgb = np.exp(np.cumsum(lgb_strat_returns))
+
+            # 2. Create Figure with 2 subplots (stacked vertically)
+            fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 12))
+            
+            # --- Top Panel: Cumulative Returns ---
+            ax1.plot(y_test.index, cum_bh, label="Buy & Hold", color='tab:blue', linewidth=1.5)
+            ax1.plot(y_test.index, cum_ridge, label="Ridge L/S", color='tab:orange', linewidth=1.5)
+            ax1.plot(y_test.index, cum_lgb, label="LightGBM L/S", color='tab:green', linewidth=1.5)
+            
+            ax1.set_title("Cumulative Returns: Buy & Hold vs ML Long/Short Strategies", fontsize=14)
+            ax1.set_ylabel("Growth of $1", fontsize=12)
+            ax1.axhline(1.0, color='gray', linestyle='--', alpha=0.5)
+            ax1.legend(loc="upper left")
+            ax1.grid(True, linestyle=':', alpha=0.6)
+            
+            # --- Bottom Panel: Scatter Plot (Predicted vs Actual) ---
+            ax2.scatter(y_test.values, lgb_preds, alpha=0.4, s=15, color='tab:blue')
+            
+            # Draw the red dashed "Perfect Prediction" diagonal line
+            min_val = min(y_test.min(), lgb_preds.min()) - 0.02
+            max_val = max(y_test.max(), lgb_preds.max()) + 0.02
+            ax2.plot([min_val, max_val], [min_val, max_val], color='tab:red', linestyle='--', alpha=0.6, label="Perfect prediction")
+            
+            ax2.set_title("LightGBM: Predicted vs Actual Returns", fontsize=14)
+            ax2.set_xlabel("Actual Log Return", fontsize=12)
+            ax2.set_ylabel("Predicted Log Return", fontsize=12)
+            ax2.axhline(0, color='gray', linestyle='--', alpha=0.5)
+            ax2.axvline(0, color='gray', linestyle='--', alpha=0.5)
+            ax2.legend(loc="upper left")
+            ax2.grid(True, linestyle=':', alpha=0.6)
+            
+            plt.tight_layout()
             st.pyplot(fig)

@@ -10,5 +10,7 @@ python_version: "3.10"
 pinned: false
 ---
 
+TRY OUT: https://huggingface.co/spaces/josxnowm/nvda-stock-predictor
+
 # NVDA Stock Predictor
 Machine Learning model predicting the price direction of NVIDIA stock using technical indicators and news sentiment.
